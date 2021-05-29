@@ -46,7 +46,7 @@ roa = 0.95
 rob = 1
 roab = 0.95
 
-for x in range(1):
+for x in range(na):
     
     # categorias
     ct = numpy.zeros((nb, 2*mb))
@@ -123,11 +123,70 @@ for x in range(1):
     yb[x,:] = 0
     yb[x, J] = 1
 
-    #atualização dos pesos
+    # atualização dos pesos
     for j in range(2*ma):
         wa[J, j] = beta * min(ia[x,j], wa[J,j]) + (1-beta) * wa[J,j]
     
     for k in range(2*mb):
         wb[K, k] = beta * min(ib[x,k], wa[K,k]) + (1-beta) * wb[K,k]
-    print(wb)
+    
+    wab[J,:] = 0
+    wab[J,K] = 1  
+    
+    # entrada da fase de diagnóstico
+    ad = numpy.matrix("1 1; 0.5 1; 0.2 0.9");
+    iad = adc = None
+    if (numpy.max(numpy.abs(ad) > 1)):
+        iad = normalizar(ad)
+    else:
+        adc = 1 - ad;
+        iad = numpy.concatenate((ad, adc), 1)
+    
+    [nd, md] = numpy.shape(ad)
+    
+    # matriz de atividade
+    yad = numpy.zeros((nd, nd))
 
+    # categorias
+    ct = numpy.zeros((nd, 2*md))
+    for i in range(nd):
+        for k in range(2*md):
+            ct[i, k] = min(iad[x, k], wa[i, k])
+    
+    ct = numpy.sum(ct, axis = 1, keepdims = True)
+    tad = ct / (alfa + numpy.sum(wa[x,:]))
+    
+    # categoria vencedora
+    D = maximaCategoria(tad)
+    
+    # teste de vigilância
+    for k in range(2*md):
+        tv[x, k] = min(iad[x, k], wa[D, k])
+    tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(iad[x,:])
+    
+    while (tvig[x] < roa):
+        tad[D] = 0
+        D = maximaCategoria(tad)
+        for k in range(2*md):
+            tv[x, k] = min(iad[x, k], wa[D, k])
+        tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(iad[x,:])
+    
+    yad[x,:] = 0
+    yad[x,D] = 1  
+
+    ybd = numpy.dot(yad, wab)
+    
+    fim = numpy.zeros(nd)
+    for i in range(nd):
+        for j in range(na):
+            if (ybd[i,j] == 1):
+                fim[i] = j;
+                continue
+    print(f"{x} {na}")
+    if (x == (na-1)):
+        wbd = numpy.zeros((nd, mb))
+        for i in range(nd):
+            for j in range(mb):
+                wbd[i,j] = wb[int(fim[i]), j]
+        print(wbd)
+    
