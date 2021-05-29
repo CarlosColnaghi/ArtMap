@@ -189,4 +189,3 @@ for x in range(na):
         for i in range(nd):
             for j in range(mb):
                 wbd[i,j] = wb[int(fim[i]), j]
-        print(wbd)
