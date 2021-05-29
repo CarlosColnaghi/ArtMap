@@ -182,11 +182,9 @@ for x in range(na):
             if (ybd[i,j] == 1):
                 fim[i] = j;
                 continue
-    print(f"{x} {na}")
+
     if (x == (na-1)):
         wbd = numpy.zeros((nd, mb))
         for i in range(nd):
             for j in range(mb):
                 wbd[i,j] = wb[int(fim[i]), j]
-        print(wbd)
-    
