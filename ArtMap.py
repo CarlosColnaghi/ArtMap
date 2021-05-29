@@ -98,4 +98,36 @@ for x in range(1):
     for j in range(nb):
         mt[x, j] = min(yb[x, j], wab[J,j])
     mtr[x] = numpy.sum(mt[x,:]) / numpy.sum(yb[x,:])
-    print(mtr)
+    
+    # tem que testar melhor esta parte
+    while numpy.max(mtr) < roab:
+        ta[J] = 0
+        J = maximaCategoria(ta)
+        
+        for j in range(2*ma):
+            tv[x, j] = min(ia[x, j], wa[J, j])
+        tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ia[x,:])
+        
+        while numpy.max(tvig(x)) < roa:
+            ta[J] = 0;
+            J = maximaCategoria(ta);
+            for j in range(2*ma):
+                tv[x, j] = min(ia[x,j], wa[J,j])
+            tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ia[x,:])
+
+
+        for j in range(nb):
+            mt[x,j] = min(yb[x,j], wab[J,j])
+        mtr[x] = numpy.sum(mt[x,:]) / numpy.sum(yb[x,:])
+    
+    yb[x,:] = 0
+    yb[x, J] = 1
+
+    #atualização dos pesos
+    for j in range(2*ma):
+        wa[J, j] = beta * min(ia[x,j], wa[J,j]) + (1-beta) * wa[J,j]
+    
+    for k in range(2*mb):
+        wb[K, k] = beta * min(ib[x,k], wa[K,k]) + (1-beta) * wb[K,k]
+    print(wb)
+
