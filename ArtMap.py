@@ -37,7 +37,7 @@ wab = numpy.ones((na, nb))
 
 # matriz de ativação
 ya = numpy.zeros(na)
-yb = numpy.zeros(nb)
+yb = numpy.zeros((nb, nb))
 
 # parâmetros da rede
 alfa = 0.1
@@ -71,6 +71,31 @@ for x in range(1):
         for k in range(2*mb):
             tv[x, k] = min(ib[x, k], wb[x, k])
         tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ib[x,:])
+
+    # matriz de atividade B
+    yb[x,:] = 0
+    yb[x, K] = 1
+
+    # categoria Ta
+    ct = numpy.zeros((na, 2*ma))
+    for i in range(na):
+        for j in range(2*ma):
+            ct[i, j] = min(ia[x, j], wa[i, j])
+    ct = numpy.sum(ct, axis = 1, keepdims = True)
+    ta = ct / (alfa + numpy.sum(wa[x,:]))
+
+    # categoria vencedora
+    J = maximaCategoria(ta)
     
-    print(tv)
-    print(tvig)
+    tv = numpy.zeros((na, 2*ma))
+    for j in range(2*ma):
+        tv[x, j] = min(ia[x, j], wa[J, j])
+    tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ia[x,:])
+
+    # match tracking
+    mt = numpy.zeros((na, nb))
+    mtr = numpy.zeros(na)
+    for j in range(nb):
+        mt[x, j] = min(yb[x, j], wab[J,j])
+    mtr[x] = numpy.sum(mt[x,:]) / numpy.sum(yb[x,:])
+    print(mtr)
