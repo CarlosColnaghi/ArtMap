@@ -47,7 +47,6 @@ rob = 1
 roab = 0.95
 
 for x in range(na):
-    
     # categorias
     ct = numpy.zeros((nb, 2*mb))
     for i in range(nb):
@@ -175,8 +174,10 @@ for x in range(na):
     yad[x,D] = 1  
 
     ybd = numpy.dot(yad, wab)
+
+    if (x == 0):
+        fim = numpy.zeros(nd)
     
-    fim = numpy.zeros(nd)
     for i in range(nd):
         for j in range(na):
             if (ybd[i,j] == 1):
@@ -188,3 +189,4 @@ for x in range(na):
         for i in range(nd):
             for j in range(mb):
                 wbd[i,j] = wb[int(fim[i]), j]
+        print(wbd)
