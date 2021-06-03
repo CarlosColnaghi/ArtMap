@@ -1,4 +1,25 @@
 import numpy
+import pandas 
+from sklearn.model_selection import train_test_split
+
+dataset = pandas.read_csv('Iris.csv', sep = ',')
+dataset = dataset.drop('Id', axis=1)
+train, test = train_test_split(dataset, test_size = 0.2)
+
+def matriz_entrada(matriz):
+    matriz = numpy.asmatrix(matriz)
+    return numpy.delete(matriz, 4, 1)
+
+def matriz_saida(matriz):
+    matriz = numpy.asmatrix(matriz)
+    categoria = {"Iris-setosa": 0, "Iris-versicolor": 1, "Iris-virginica": 2}
+    b = numpy.zeros(numpy.shape(matriz[:, 4]))
+    for i in range(numpy.shape(matriz[:, 4])[0]):
+        b[i, 0] = categoria[matriz[i, 4]]
+    return numpy.matrix(b)
+
+print(matriz_saida(train))
+print(train)
 
 def normalizar(entrada):
     somatoria = numpy.sum(entrada)
@@ -11,7 +32,7 @@ def maximaCategoria(entrada):
     return numpy.where(entrada == numpy.max(entrada))[0][0]
 
 a = numpy.matrix("1 0; 0 1; 0.5 0.5")
-b = numpy.matrix("1; 0; 1")
+b = numpy.matrix("1; 0; 2")
 ia = ib = None
 
 # normalização
@@ -133,7 +154,7 @@ for x in range(na):
     wab[J,K] = 1  
     
     # entrada da fase de diagnóstico
-    ad = numpy.matrix("1 1; 0.5 1; 0.2 0.9");
+    ad = numpy.matrix("1 0; 0 1; 0.5 0.5");
     iad = adc = None
     if (numpy.max(numpy.abs(ad) > 1)):
         iad = normalizar(ad)
@@ -189,3 +210,4 @@ for x in range(na):
         for i in range(nd):
             for j in range(mb):
                 wbd[i,j] = wb[int(fim[i]), j]
+        #print(wbd)
