@@ -2,24 +2,24 @@ import numpy
 import pandas 
 from sklearn.model_selection import train_test_split
 
+pandas.options.display.max_columns = None
+pandas.options.display.max_rows = None
+
 dataset = pandas.read_csv('Iris.csv', sep = ',')
 dataset = dataset.drop('Id', axis=1)
-train, test = train_test_split(dataset, test_size = 0.2)
+train, test = train_test_split(dataset, test_size = 0.5)
 
-def matriz_entrada(matriz):
+def matriz_caracteristica(matriz):
     matriz = numpy.asmatrix(matriz)
     return numpy.delete(matriz, 4, 1)
 
-def matriz_saida(matriz):
+def matriz_categoria(matriz):
     matriz = numpy.asmatrix(matriz)
     categoria = {"Iris-setosa": 0, "Iris-versicolor": 1, "Iris-virginica": 2}
     b = numpy.zeros(numpy.shape(matriz[:, 4]))
     for i in range(numpy.shape(matriz[:, 4])[0]):
         b[i, 0] = categoria[matriz[i, 4]]
     return numpy.matrix(b)
-
-print(matriz_saida(train))
-print(train)
 
 def normalizar(entrada):
     somatoria = numpy.sum(entrada)
@@ -28,11 +28,14 @@ def normalizar(entrada):
     saida = numpy.abs(i / somatoria)
     return saida
 
-def maximaCategoria(entrada):
+def maxima_categoria(entrada):
     return numpy.where(entrada == numpy.max(entrada))[0][0]
 
-a = numpy.matrix("1 0; 0 1; 0.5 0.5")
-b = numpy.matrix("1; 0; 2")
+#a = numpy.matrix("1 0; 0 1; 0.5 0.5")
+#b = numpy.matrix("1; 0; 2")
+a = matriz_caracteristica(train)
+b = matriz_categoria(train)
+
 ia = ib = None
 
 # normalização
@@ -61,8 +64,8 @@ ya = numpy.zeros(na)
 yb = numpy.zeros((nb, nb))
 
 # parâmetros da rede
-alfa = 0.1
-beta = 0.8
+alfa = 0.95
+beta = 1
 roa = 0.95
 rob = 1
 roab = 0.95
@@ -76,18 +79,20 @@ for x in range(na):
     ct = numpy.sum(ct, axis = 1, keepdims = True)
     tb = ct / (alfa + numpy.sum(wb[x,:]))
     
-    K = maximaCategoria(tb)
+    K = maxima_categoria(tb)
 
     # teste de vigilância
-    tv = numpy.zeros((na, 2*mb))
+    if (x == 0):
+        tv = numpy.zeros((na, 2*mb))
     for k in range(2*mb):
         tv[x, k] = min(ib[x, k], wb[x, k])
-    tvig = numpy.zeros(na)
+    if (x == 0):
+        tvig = numpy.zeros(na)
     tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ib[x,:])
 
     while (tvig[x] < rob):
         tb[K] = 0
-        K = maximaCategoria(tb)
+        K = maxima_categoria(tb)
         for k in range(2*mb):
             tv[x, k] = min(ib[x, k], wb[x, k])
         tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ib[x,:])
@@ -105,32 +110,32 @@ for x in range(na):
     ta = ct / (alfa + numpy.sum(wa[x,:]))
 
     # categoria vencedora
-    J = maximaCategoria(ta)
-    
-    tv = numpy.zeros((na, 2*ma))
+    J = maxima_categoria(ta)
+    if (x == 0):
+        tv = numpy.zeros((na, 2*ma))
     for j in range(2*ma):
         tv[x, j] = min(ia[x, j], wa[J, j])
     tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ia[x,:])
 
     # match tracking
-    mt = numpy.zeros((na, nb))
-    mtr = numpy.zeros(na)
+    if (x == 0):
+        mt = numpy.zeros((na, nb))
+        mtr = numpy.zeros(na)
     for j in range(nb):
         mt[x, j] = min(yb[x, j], wab[J,j])
     mtr[x] = numpy.sum(mt[x,:]) / numpy.sum(yb[x,:])
     
-    # tem que testar melhor esta parte
     while numpy.max(mtr) < roab:
         ta[J] = 0
-        J = maximaCategoria(ta)
+        J = maxima_categoria(ta)
         
         for j in range(2*ma):
             tv[x, j] = min(ia[x, j], wa[J, j])
         tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ia[x,:])
         
-        while numpy.max(tvig(x)) < roa:
+        while numpy.max(tvig[x]) < roa:
             ta[J] = 0;
-            J = maximaCategoria(ta);
+            J = maxima_categoria(ta);
             for j in range(2*ma):
                 tv[x, j] = min(ia[x,j], wa[J,j])
             tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(ia[x,:])
@@ -152,14 +157,16 @@ for x in range(na):
     
     wab[J,:] = 0
     wab[J,K] = 1  
-    
+
     # entrada da fase de diagnóstico
-    ad = numpy.matrix("1 0; 0 1; 0.5 0.5");
+    #ad = numpy.matrix("1 0; 0 1; 0.5 0.5");
+    ad = matriz_caracteristica(test)
+
     iad = adc = None
     if (numpy.max(numpy.abs(ad) > 1)):
         iad = normalizar(ad)
     else:
-        adc = 1 - ad;
+        adc = 1 - ad
         iad = numpy.concatenate((ad, adc), 1)
     
     [nd, md] = numpy.shape(ad)
@@ -177,7 +184,7 @@ for x in range(na):
     tad = ct / (alfa + numpy.sum(wa[x,:]))
     
     # categoria vencedora
-    D = maximaCategoria(tad)
+    D = maxima_categoria(tad)
     
     # teste de vigilância
     for k in range(2*md):
@@ -186,7 +193,7 @@ for x in range(na):
     
     while (tvig[x] < roa):
         tad[D] = 0
-        D = maximaCategoria(tad)
+        D = maxima_categoria(tad)
         for k in range(2*md):
             tv[x, k] = min(iad[x, k], wa[D, k])
         tvig[x] = numpy.sum(tv[x,:]) / numpy.sum(iad[x,:])
@@ -210,4 +217,16 @@ for x in range(na):
         for i in range(nd):
             for j in range(mb):
                 wbd[i,j] = wb[int(fim[i]), j]
-        #print(wbd)
+
+        matriz_saidas = numpy.concatenate((wbd, matriz_categoria(test), numpy.asmatrix(test[test.columns[4]]).T), axis=1)
+        print(pandas.DataFrame(matriz_saidas, columns=["Saída Processada", "Saída Esperada", "Categoria Esperada"]))
+        numero_acertos = 0
+        for i in range(numpy.shape(wbd)[0]):
+            categorias = matriz_categoria(test)
+            if (wbd[i] == 1):
+                numero_acertos += 1
+        porcentagem_acertos = numero_acertos/numpy.shape(wbd)[0]*100
+        numero_erros = numpy.shape(wbd)[0] - numero_acertos
+        porcentagem_erros = 100 - porcentagem_acertos
+        matriz_estatisticas = numpy.matrix([[numero_acertos, porcentagem_acertos], [numero_erros, porcentagem_erros]])
+        print(pandas.DataFrame(matriz_estatisticas,columns=["Quantidade", "Porcentagem (%)"], index=["Acertos", "Erros"]))
